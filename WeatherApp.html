@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.1/darkly/bootstrap.min.css">
+
+<style>
+.forecast{
+  width: 10rem;
+}
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+</head>
+
+<body  class="container h-100 bg-dark">
+
+    <div class="container h-100 bg-dark">
+        <h2 class="text-center my-4 text-light">Aplikacja Pogodowa</h2>
+        <form class="form-inline d-flex justify-content-center my-3">
+          <input type="text" class="form-control mb-2 mr-sm-2 border-light" id="city-input" placeholder="Wprowadź nazwę miasta">
+          <button type="submit" class="btn btn-success" id="get-weather-btn">Wyszukaj</button>
+        </form>
+        <div class="weather-info my-5 text-center text-light">
+          
+            <p>Miasto: <span id="city-name"> - </span></p>
+            <p>Temperatura: <span id="temperature">-°C</span></p>
+            <p>Opis: <span id="description"> -</span></p>
+        </div>
+          <div class="forecast-scroll-container d-flex overflow-auto mt-5" id="forecast">
+            <!-- Forecast containers will be added here -->
+          </div>
+        
+
+    </div>
+<script>
+var API_KEY = "61c057a15b95115b35f5c980e64cb155";
+ 
+var lat;
+var lon;
+
+if(navigator.geolocation){
+  navigator.geolocation.getCurrentPosition(getPosition, error);
+}
+
+function getPosition(position) {
+  lat = position.coords.latitude;
+  lon = position.coords.longitude;
+  var API_URL_LOCATION = "https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + lon + "&units=metric" + "&appid=" + API_KEY + "&lang=pl"; 
+  var API_URL_FORECAST_LOCATION = "https://api.openweathermap.org/data/2.5/forecast?lat=" + lat + "&lon=" + lon + "&units=metric" + "&appid=" + API_KEY + "&lang=pl"; 
+     
+  $.get(API_URL_LOCATION, function(data) {
+  icon = data.weather[0].icon;
+  var temperature = data.main.temp;
+  var description = data.weather[0].description;
+  var cityName = data.name
+  $(".weather-info").html("<p class='forecast d-inline-block mw-1'>Miasto: " + cityName + "<img src='http://openweathermap.org/img/wn/" + icon + "@2x.png' alt='Weather Icon'> Temperatura: " + temperature 
+      + "°C Opis: " + description + "</p>");
+  })
+  getForecasts(API_URL_FORECAST_LOCATION)
+}
+
+function error(err) {
+  console.warn(`ERROR(${err.code}): ${err.message}`);
+}
+
+
+  $("#get-weather-btn").click(function(event) {
+    event.preventDefault();
+    var city = $("#city-input").val();
+    var API_URL_WEATHER = "https://api.openweathermap.org/data/2.5/weather?q=" + city + "&units=metric" + "&appid=" + API_KEY + "&lang=pl";
+    var API_URL_FORECAST = "https://api.openweathermap.org/data/2.5/forecast?q=" + city + "&units=metric" + "&appid=" + API_KEY + "&lang=pl";
+
+    $.get(API_URL_WEATHER, function(data) {
+      icon = data.weather[0].icon;
+      var temperature = data.main.temp;
+      var description = data.weather[0].description;
+      var cityName = data.name
+      $(".weather-info").html("<p class='forecast d-inline-block mw-1'>Miasto: " + cityName + "<img src='http://openweathermap.org/img/wn/" + icon + "@2x.png' alt='Weather Icon'> Temperatura: " + temperature 
+        + "°C Opis: " + description + "</p>");
+    });
+
+    getForecasts(API_URL_FORECAST);
+  });
+
+  function getForecasts(API_URL_FORECAST){
+    /*
+    $.ajax({
+      type: "GET",
+      url: API_URL_FORECAST,
+      dataType: "json",
+      success: function(data) {
+        var forecast = "";
+        var days = 0;
+        for (var i = 0; i < data.list.length; i++) {
+            if (data.list[i].dt_txt.endsWith("12:00:00") && days < 5) {
+              forecast += "<p class='forecast mr-2'>" + data.list[i].dt_txt + "<img src='http://openweathermap.org/img/wn/" + data.list[i].weather[0].icon + "@2x.png' alt='Weather Icon'>" + data.list[i].main.temp + "°C "
+              + data.list[i].weather[0].description + "</p>";
+              days++;
+          }
+        }
+        $("#forecast").html("<div class='forecast-container d-flex text-center'>" + forecast + "</div>");
+      }
+    }); 
+    */
+
+    $.ajax({
+      type: "GET",
+      url: API_URL_FORECAST,
+      dataType: "json",
+      success: function(data) {
+        var forecast = "";
+        var records = 0;
+        for (var i = 0; i < data.list.length; i++) {
+            if (records < 9) {
+              forecast += "<p class='forecast mr-2'>" + data.list[i].dt_txt + "<img src='http://openweathermap.org/img/wn/" + data.list[i].weather[0].icon + "@2x.png' alt='Weather Icon'>" 
+                + data.list[i].main.temp + "°C " + data.list[i].weather[0].description + "</p>";
+              records++;
+          }
+        }
+        $("#forecast").html("<div class='forecast-container d-flex text-center'>" + forecast + "</div>");
+      }   
+    });
+  }
+</script>
+</body>
+</html>
